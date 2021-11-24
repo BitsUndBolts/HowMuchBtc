@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style type="text/css">
+			html {
+				font-family: Courier New,Courier,Lucida Sans Typewriter,Lucida Typewriter,monospace;
+				background-color: #282923;
+				color: white;
+				text-align: center;
+			}
+			h1,h2,h3,h4,h5 {
+				margin:10px;
+			}
+			.em25 {
+				font-size: 2.5em
+			}
+			.element {
+				margin: 20px;
+			}
+			button {
+				background-color: #666;
+				border: none;
+				color: white;
+				padding: 15px 32px;
+				text-align: center;
+				text-decoration: none;
+				display: inline-block;
+				font-size: 16px;
+				cursor: pointer;
+				width: 280px
+			}
+			button:hover {
+				background-color: #999;
+			}
+			button:active {
+				background-color: #555;
+			}
+			#result {
+				margin-top: 40px;
+			}
+			#footer {
+				position: fixed;
+				bottom: 0;
+				width: 100%;
+				padding: 20px;
+				color:#888;
+			}
+			#donate {
+				z-index: 9999;
+				border-radius: 5px;
+				text-align: left;
+				background-color: #444;
+				width: 600px;
+				height: 180px;
+				padding-top:50px;
+				padding-left:50px;
+			}
+			#donate td {
+				padding:5px;
+			}
+			#donate td:first-of-type {
+				color: #888;
+				font-weight: bold;
+			}
+			#close {
+				position: absolute;
+				top: 5px;
+				right: 10px;
+			}
+			#close a {
+				font-size: 1.5em
+			}
+			svg {
+				cursor: pointer;
+				color: lightblue;
+			}
+			svg:hover {
+				color: white
+			}
+			.center {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				-webkit-transform: translate(-50%, -50%);
+				transform: translate(-50%, -50%);
+			}
+			a {
+				color: lightblue;
+				text-decoration: none;
+			}
+			a:active {
+				color: white;
+			}
+			a:visited {
+				color: lightblue;
+			}
+
+			form {
+			  width: 100%;
+			  max-width: 400px;
+			  margin: 30px auto;
+			}
+			form input {
+			  text-align: center;
+	   		  background-color: #282923;
+			  font-size: 2.5em;
+			  padding: 0;
+			  border: 2px solid #ccc;
+			  width: 100%;
+			  color: #aaa;
+			  border-radius: 0 7px 7px 0;
+			  font-family: 'PT Sans', sans-serif;
+			  font-weight: bold;
+			}
+			form input:focus {
+			  outline: 0;
+			}
+			form input.error {
+			  border-color: #ff0000;  
+			}
+			form label.error {
+			  background-color: #ff0000;
+			  color: #fff;
+			  padding: 6px;
+			  font-size: 11px;
+			}
+
+			label {
+			  color: #999;
+			  display: block;
+			  margin-bottom: 10px;
+			  text-transform: uppercase;
+			  font-size: 18px;
+			  font-weight: bold;
+			  letter-spacing: 0.05em
+			}
+			.flex {
+			  display: flex;
+			  justify-content: flex-start;
+			}
+			.flex input {
+			  max-width: 300px;
+			  flex: 1 1 300px;
+			}
+			.flex .currency {
+			  font-size: 30px;
+			  padding: 5px 10px 0 10px;
+			  color: #999;
+			  border: 2px solid #ccc;
+			  border-right: 0;
+			  line-height: 2.5;
+			  border-radius: 7px 0 0 7px;
+			  background: white;
+			}
+
+			#result .primary {
+				font-weight: bold;
+				font-size: 1.5em;
+			}
+
+			#result div {
+				margin: 10px 0;
+			}
+
+			.currencySign {
+				color: #aaa
+			}
+		</style>
+		<script type="text/javascript">
+			let previousBtcPrice = 0;
+
+			function toggleDonate() {
+				const value = document.getElementById('donate').style.display;
+				if (value === "none") {
+					document.getElementById('donate').style.display = "inline";
+				} else {
+					document.getElementById('donate').style.display = "none";
+				}
+			}
+
+			function calculate() {
+				const million = 1000000;
+				const trillion = 1000000000000;
+				const worldWealthInTrillion = 430;
+				const maxBitcoinsInMillion = 18.5;
+
+				let myWealth = document.getElementById("myWealth").value;
+				let result = (myWealth / (worldWealthInTrillion * trillion) * (maxBitcoinsInMillion * million)).toFixed(8);
+
+				getBitcoinPrice(result, myWealth);
+			}
+
+			function curr(x) {
+				const numberValue = (x*1).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			    return '<span class="currencySign">US&#36;</span>' + numberValue;
+			}
+
+			function getBitcoinPrice(requiredBitcoin, myWealth) {
+				var currentPrice = new XMLHttpRequest();
+
+				currentPrice.open('GET', 'https://blockchain.info/ticker?_=' + new Date().getTime(), true);
+				currentPrice.onreadystatechange = function(){
+				  if(currentPrice.readyState == 4){
+				    var ticker = JSON.parse(currentPrice.responseText);
+				    let btcPrice = ticker["USD"].last;
+				    const topTwoPercentBtc = 0.28;
+				    const minimumBtc = 0.0025;
+				    const goalBtc = (myWealth * 0.1 / btcPrice).toFixed(8);
+
+				    if (autoSpeak) {
+				    	let prefix = "Bitcoin price has not changed - The price is ";
+				    	if (previousBtcPrice === 0) {
+							prefix = "Bitcoin price is ";
+				    	} else if (previousBtcPrice > btcPrice) {
+			    			prefix = "Bitcoin is down - The price is ";
+			    		} else if (previousBtcPrice < btcPrice) {
+			    			prefix = "Bitcoin is up - The price is ";
+			    		}
+			    		previousBtcPrice = btcPrice;
+
+				    	speak(prefix + btcPrice.toFixed(0) + " USD");
+				    }
+
+					document.getElementById('result').innerHTML = '<div class="primary">You should own at least <span class="currencySign">&#8383;</span>' + requiredBitcoin + '</div>' + 
+					"<div>The investment above will cost you " + curr((requiredBitcoin * btcPrice)) + " today</div><br/>" +
+
+					'<div class="primary">Your goal should be to own <span class="currencySign">&#8383;</span>' + goalBtc + '</div>' + 
+					"<div>The investment above will cost you " + curr((goalBtc * btcPrice)) + " today</div><br/>" +
+
+					'<div>To be in the top 2% of BTC-Hodlers, you need <span class="currencySign">&#8383;</span>' + topTwoPercentBtc + " (" + curr(topTwoPercentBtc * btcPrice) + " today)</div>" + 
+					'<div>It is best to own at least <span class="currencySign">&#8383;</span>' + minimumBtc + " (" + curr(minimumBtc * btcPrice) + " today)</div><br/>" +
+					'<div class="primary">A whole Bitcoin costs ' + curr(btcPrice) + ' today</div>'
+				  };
+				};
+				currentPrice.send();
+			}
+		</script>
+		<title>How much &#8383; should you own?</title>
+	</head>
+	<body>
+		<div class="element">
+			<h1>How much Bitcoin should you own?</h1>
+		</div>
+		<div>
+			<form id="form" method="post" action="">
+			    <label for="amount">Enter your wealth in US&#36;</label>
+			    <div class="flex">
+			      <span class="currency">US&#36;</span>
+			      <input autocomplete="off" id="myWealth" type="text" maxlength="12" value="10000" />
+			    </div>
+			</form>
+		</div>
+		<div class="element">
+			<button onclick="calculate()" id="calculate">Calculate</button>
+		</div>
+		<div class="element">
+			<button onclick="toggleSpeak()" id="autoSpeak">Auto Voice Notify: OFF</button>
+		</div>
+		<div class="element">
+			Speak-Interval (in seconds): <input style="width: 35px; text-align: center;" type="text" id="autoSpeakInterval" value="300" />
+		</div>
+		<div id="result">
+		</div>
+		<div id="footer">
+			<div>
+				<a href="https://coinmarketcap.com/" target="_blank">CoinMarketCap</a> | 
+				<a href="https://accounts.binance.com/en/register?ref=QIPY0Z6V" target="_blank">Binance</a> |
+				<a href="https://www.okcoin.com/join?channelId=600087196" target="_blank">OKCoin</a> |
+				<a href="https://coin360.com/" target="_blank">Coin360</a> |
+				<a href="https://www.blockchaincenter.net/bitcoin-rainbow-chart/" target="_blank">Rainbow Chart</a>
+			</div>
+			<div style="float: left"><a href="javascript:void(0)" onclick="toggleDonate()">Donate</a></div>
+		</div>
+		<div id="donate" class="center" style="display: none">
+			<div id="close"><a href="javascript:void(0)" onclick="toggleDonate()" />X</a></div>
+			<table>
+				<tr>
+					<td>Bitcoin</td>
+					<td>bc1qyjxfk8kfpngamlt9lvwatfetu2h2ugh70hklwk</td>
+				</tr>
+				<tr>
+					<td>Solana</td>
+					<td>3ruVNiJh2akPs1B7588u7PtZn1mUBaYdabfwZWG3hC3a</td>
+				</tr>
+				<tr>
+					<td>Doge</td>
+					<td>DHh6KUPEudi1yLPjfQ3h9GSDL6fzWA4qor</td>
+				</tr>
+				<tr>
+					<td>Litecoin</td>
+					<td>ltc1qtdg22reeqqm8nnet5myur9zmxy3lrs0xvrq6gz</td>
+				</tr>
+				<tr>
+					<td>Bitcoin Cash</td>
+					<td>qpsa6y8kncvu497xu9t7wlxy9tfmzde2fszhtpf708</td>
+				</tr>
+			</table>
+		</div>
+		<script type="text/javascript">
+			var input = document.getElementById("myWealth");
+			input.addEventListener("keydown", function(event) {
+			  if (event.keyCode === 13) {
+			    event.preventDefault();
+			    document.getElementById("calculate").click();
+			  }
+			});
+
+
+			var T2S; 
+			var autoSpeak = false;
+			var interval = null;
+
+			function speak(text) {
+				if("speechSynthesis" in window || speechSynthesis){ // Checking If speechSynthesis Is Supported.
+				    T2S = window.speechSynthesis || speechSynthesis; // Storing speechSynthesis API as variable - T2S
+				    var utter = new SpeechSynthesisUtterance(text); // To Make The Utterance
+				    T2S.speak(utter); // To Speak The Utterance
+				}
+			}
+
+			window.onbeforeunload = function() {
+				if (T2S !== undefined) {
+			        T2S.cancel();
+			        clearInterval(interval);
+			    }
+		    }
+
+		    function toggleSpeak() {
+		    	autoSpeak = !autoSpeak;
+		    	document.getElementById("autoSpeak").innerHTML = "Auto Voice Notify: " + (autoSpeak ? " ON" : " OFF");
+
+		    	if (autoSpeak) {
+		    		let speakInterval = Math.max(Math.abs(document.getElementById("autoSpeakInterval").value * 1000), 10000);
+		    		calculate();
+		    		interval = setInterval(function() { 
+			    		calculate() 
+			    	}, speakInterval);
+		    	} else {
+		    		//clearInterval(interval);
+		    		window.onbeforeunload();
+		    	}
+		    }
+		</script>
+	</body>
+</html>
