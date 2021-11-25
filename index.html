@@ -173,6 +173,10 @@
 			    margin: 0 auto;
 			    border: 1px solid #666;
 			}
+
+			#voices {
+				width: 280px;
+			}
 		</style>
 		<script type="text/javascript">
 			let previousBtcPrice = 0;
@@ -216,13 +220,13 @@
 				    const goalBtc = (myWealth * 0.1 / btcPrice).toFixed(8);
 
 				    if (autoSpeak) {
-				    	let prefix = "Bitcoin price has not changed - The price is ";
+				    	let prefix = "Bitcoin price has not changed. The price is ";
 				    	if (previousBtcPrice === 0) {
 							prefix = "Bitcoin price is ";
 				    	} else if (previousBtcPrice > btcPrice) {
-			    			prefix = "Bitcoin is down - The price is ";
+			    			prefix = "Bitcoin is down. The price is ";
 			    		} else if (previousBtcPrice < btcPrice) {
-			    			prefix = "Bitcoin is up - The price is ";
+			    			prefix = "Bitcoin is up. The price is ";
 			    		}
 			    		previousBtcPrice = btcPrice;
 
@@ -265,6 +269,9 @@
 		<div class="element outline">
 			<div class="element">
 				<button onclick="toggleSpeak()" id="autoSpeak">Auto Voice Notify: OFF</button>
+			</div>
+			<div class="element">
+				<select id="voices" onchange="onChangeLanguage(this)"></select>
 			</div>
 			<div class="element">
 				Speak-Interval (seconds): <input style="width: 35px; text-align: center;" type="text" id="autoSpeakInterval" value="300" />
@@ -318,21 +325,24 @@
 			});
 
 
-			var T2S; 
+			var speech; 
+			var voices = [];
+			var selectedVoice = localStorage.getItem('selectedVoice') || 0;
 			var autoSpeak = false;
 			var interval = null;
+			document.getElementById("autoSpeakInterval").value = localStorage.getItem('interval') || 300;
 
 			function speak(text) {
-				if("speechSynthesis" in window || speechSynthesis){ // Checking If speechSynthesis Is Supported.
-				    T2S = window.speechSynthesis || speechSynthesis; // Storing speechSynthesis API as variable - T2S
-				    var utter = new SpeechSynthesisUtterance(text); // To Make The Utterance
-				    T2S.speak(utter); // To Speak The Utterance
+				if("speechSynthesis" in window || speechSynthesis) {
+				    var utter = new SpeechSynthesisUtterance(text);
+				    utter.voice = voices[selectedVoice];
+				    speech.speak(utter);
 				}
 			}
 
 			window.onbeforeunload = function() {
-				if (T2S !== undefined) {
-			        T2S.cancel();
+				if (speech !== undefined) {
+			        speech.cancel();
 			        clearInterval(interval);
 			    }
 		    }
@@ -342,16 +352,54 @@
 		    	document.getElementById("autoSpeak").innerHTML = "Auto Voice Notify: " + (autoSpeak ? " ON" : " OFF");
 
 		    	if (autoSpeak) {
-		    		let speakInterval = Math.max(Math.abs(document.getElementById("autoSpeakInterval").value * 1000), 10000);
+		    		let speakInterval = Math.max(Math.abs(document.getElementById("autoSpeakInterval").value), 15);
+		    		localStorage.setItem('interval', speakInterval);
+				    speech = window.speechSynthesis || speechSynthesis;
 		    		calculate();
-		    		interval = setInterval(function() { 
+		    		interval = setInterval(() => { 
 			    		calculate() 
-			    	}, speakInterval);
+			    	}, speakInterval * 1000);
+			    	document.getElementById("autoSpeakInterval").value = speakInterval;
 		    	} else {
-		    		//clearInterval(interval);
 		    		window.onbeforeunload();
 		    	}
 		    }
+
+
+	    	onChangeLanguage = (element) => {
+	    		window.onbeforeunload();
+    			selectedVoice = element.value;
+    			localStorage.setItem('selectedVoice', selectedVoice);
+	    		if (autoSpeak) {
+	    			calculate();
+	    		}
+	    	}
+
+	    	window.speechSynthesis.onvoiceschanged = () => doVoices();
+	    	doVoices = () => {
+				if (voices.length === 0) {
+		    		voices = window.speechSynthesis.getVoices();
+					let voiceSelect = document.querySelector("#voices");
+
+					let optionIndex = 0;
+					voices.forEach((voice, i) => {
+						if (voice.name.includes("English")) {
+							let newOption = new Option(voice.name, i);
+							if (selectedVoice == i) {
+								newOption.selected = true;
+							}
+							voiceSelect.options[optionIndex] = newOption;
+							optionIndex++;
+						}
+					})
+				}
+	    	}
+
+	    	if (!'onvoiceschanged' in speechSynthesis) {
+			    speechSynthesis.onvoiceschanged = doVoices;
+			} else {
+			    doVoices();
+			}
 		</script>
 	</body>
 </html>
