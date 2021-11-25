@@ -167,6 +167,12 @@
 			.currencySign {
 				color: #aaa
 			}
+
+			.outline {
+				width: 350px;
+			    margin: 0 auto;
+			    border: 1px solid #666;
+			}
 		</style>
 		<script type="text/javascript">
 			let previousBtcPrice = 0;
@@ -256,11 +262,13 @@
 		<div class="element">
 			<button onclick="calculate()" id="calculate">Calculate</button>
 		</div>
-		<div class="element">
-			<button onclick="toggleSpeak()" id="autoSpeak">Auto Voice Notify: OFF</button>
-		</div>
-		<div class="element">
-			Speak-Interval (in seconds): <input style="width: 35px; text-align: center;" type="text" id="autoSpeakInterval" value="300" />
+		<div class="element outline">
+			<div class="element">
+				<button onclick="toggleSpeak()" id="autoSpeak">Auto Voice Notify: OFF</button>
+			</div>
+			<div class="element">
+				Speak-Interval (seconds): <input style="width: 35px; text-align: center;" type="text" id="autoSpeakInterval" value="300" />
+			</div>
 		</div>
 		<div id="result">
 		</div>
