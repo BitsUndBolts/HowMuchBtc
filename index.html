@@ -179,6 +179,8 @@
 			}
 		</style>
 		<script type="text/javascript">
+			const audioUp = new Audio("up.mp3");
+			const audioDown = new Audio("down.mp3");
 			let previousBtcPrice = 0;
 
 			function toggleDonate() {
@@ -225,8 +227,10 @@
 							prefix = "Bitcoin price is ";
 				    	} else if (previousBtcPrice > btcPrice) {
 			    			prefix = "Bitcoin is down. The price is ";
+  							audioDown.play();
 			    		} else if (previousBtcPrice < btcPrice) {
 			    			prefix = "Bitcoin is up. The price is ";
+			    			audioUp.play();
 			    		}
 			    		previousBtcPrice = btcPrice;
 
