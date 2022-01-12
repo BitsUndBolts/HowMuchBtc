@@ -222,19 +222,23 @@
 				    const goalBtc = (myWealth * 0.1 / btcPrice).toFixed(8);
 
 				    if (autoSpeak) {
-				    	let prefix = "Bitcoin price has not changed. The price is ";
+				    	let prefix = "Bitcoin is at ";
+					let change = false;
 				    	if (previousBtcPrice === 0) {
-							prefix = "Bitcoin price is ";
+						prefix = "Bitcoin is at ";
 				    	} else if (previousBtcPrice > btcPrice) {
-			    			prefix = "Bitcoin is down. The price is ";
+						change = true;
+			    			prefix = "Bitcoin is down by  ";
   							audioDown.play();
 			    		} else if (previousBtcPrice < btcPrice) {
-			    			prefix = "Bitcoin is up. The price is ";
+						change = true;
+			    			prefix = "Bitcoin is up by ";
 			    			audioUp.play();
 			    		}
+					let speakPrice = change ? Math.abs(previousBtcPrice - btcPrice) : btcPrice;
 			    		previousBtcPrice = btcPrice;
 
-				    	speak(prefix + btcPrice.toFixed(0) + " USD");
+				    	speak(prefix + speakPrice.toFixed(0) + " dollars");
 				    }
 
 					document.getElementById('result').innerHTML = '<div class="primary">You should own at least <span class="currencySign">&#8383;</span>' + requiredBitcoin + '</div>' + 
